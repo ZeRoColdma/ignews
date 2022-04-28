@@ -22,9 +22,7 @@ export default async (request: NextApiRequest, response: NextApiResponse) => {
       q.Get(q.Match(q.Index("users_by_email"), q.Casefold(session.user.email))),
     );
 
-    let customerId = user.data.stripe_customer_id;
-
-    if (!customerId) {
+    if (!user) {
       const stripeCustomer = await stripe.customers.create({
         email: session.user.email,
       });
@@ -36,31 +34,29 @@ export default async (request: NextApiRequest, response: NextApiResponse) => {
           },
         }),
       );
-
-      customerId = stripeCustomer.id;
     }
 
-    const stripeCheckoutSession = await stripe.checkout.sessions.create({
-      customer: customerId,
-      payment_method_types: ["card"],
-      billing_address_collection: "required",
-      line_items: [
-        {
-          price: "price_1KqFI0FcTDXUwiBvKKGfQWiV",
-          quantity: 1,
-        },
-      ],
-      mode: "subscription",
-      allow_promotion_codes: true,
-      success_url: "http://localhost:3000/posts",
-      cancel_url: "http://localhost:3000",
-    });
+    //   const stripeCheckoutSession = await stripe.checkout.sessions.create({
+    //     customer: stripeCustomer,
+    //     payment_method_types: ["card"],
+    //     billing_address_collection: "required",
+    //     line_items: [
+    //       {
+    //         price: "price_1KqFI0FcTDXUwiBvKKGfQWiV",
+    //         quantity: 1,
+    //       },
+    //     ],
+    //     mode: "subscription",
+    //     allow_promotion_codes: true,
+    //     success_url: "http://localhost:3000/posts",
+    //     cancel_url: "http://localhost:3000",
+    //   });
 
-    return response.status(200).json({
-      sessionId: stripeCheckoutSession.id,
-    });
-  } else {
-    response.setHeader("Allow", "POST");
-    response.status(405).end("Method Not Allowed");
+    //   return response.status(200).json({
+    //     sessionId: stripeCheckoutSession.id,
+    //   });
+    // } else {
+    //   response.setHeader("Allow", "POST");
+    //   response.status(405).end("Method Not Allowed");
   }
 };
